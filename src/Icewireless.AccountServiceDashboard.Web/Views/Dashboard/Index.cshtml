@@ -1,0 +1,241 @@
+@model Icewireless.AccountServiceDashboard.Web.ViewModels.DashboardPageViewModel
+@{
+    ViewData["Title"] = Model.Title;
+    ViewBag.ActiveNavKey = Model.ActiveNavKey;
+    ViewBag.Breadcrumbs = Model.Breadcrumbs;
+    var k = Model.Kpis;
+    var c = Model.Charts;
+    var queryPayload = Model.KpiQueries.ToDictionary(
+        kv => kv.Key,
+        kv => new { title = kv.Value.Title, notes = kv.Value.Notes, sql = kv.Value.Sql });
+
+    Icewireless.AccountServiceDashboard.Web.ViewModels.KpiCardViewModel Card(
+        string title, string value, string footnote, string queryKey,
+        Icewireless.AccountServiceDashboard.Application.DTOs.KpiTrendDto trend,
+        string? previousDisplay, string? valueCss = null, string? linesKey = null, bool showChart = true) => new()
+    {
+        Title = title,
+        Value = value,
+        Footnote = footnote,
+        QueryKey = queryKey,
+        ValueCss = valueCss,
+        LinesKey = linesKey,
+        ShowChart = showChart,
+        Trend = trend,
+        PreviousDisplay = previousDisplay
+    };
+
+    static object LineChart(string title, string note, string color, IEnumerable<Icewireless.AccountServiceDashboard.Application.DTOs.TrendPointDto> points) => new
+    {
+        title,
+        note,
+        chartType = "line",
+        color,
+        points = points.Select(x => new { label = x.PeriodLabel, value = (double)x.Value }).ToList()
+    };
+
+    static object RateLineChart(string title, string note, string color, IEnumerable<Icewireless.AccountServiceDashboard.Application.DTOs.RatePointDto> points) => new
+    {
+        title,
+        note,
+        chartType = "line",
+        color,
+        points = points.Select(x => new { label = x.PeriodLabel, value = x.Value }).ToList()
+    };
+
+    static object CompareChart(string title, double? previous, double current, string prevLabel) => new
+    {
+        title,
+        note = "Current period vs immediately preceding equivalent period.",
+        chartType = "line",
+        color = "#1a6f9a",
+        points = new[]
+        {
+            new { label = prevLabel, value = previous ?? 0d },
+            new { label = "Current period", value = current }
+        }
+    };
+
+    var prevLabel = k.NewActiveTrend.PreviousFromDate.HasValue && k.NewActiveTrend.PreviousToDate.HasValue
+        ? $"{k.NewActiveTrend.PreviousFromDate:yyyy-MM-dd} → {k.NewActiveTrend.PreviousToDate:yyyy-MM-dd}"
+        : "Previous period";
+
+    object pendingChart = k.PendingCancellationTrend.Sparkline.Count > 1
+        ? new
+        {
+            title = "Pending Cancellation",
+            note = "Weekly entries into Pending to Close (C) during the selected period.",
+            chartType = "line",
+            color = "#b9770e",
+            points = k.PendingCancellationTrend.Sparkline.Select((v, i) => new { label = $"W{i + 1}", value = v }).ToList()
+        }
+        : CompareChart("Pending Cancellation", k.PendingCancellationTrend.PreviousValue, k.PendingCancellationEvents, prevLabel);
+
+    var kpiCharts = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+    {
+        ["new-active"] = LineChart("New Active Lines", "Weekly activations by ACCOUNTS.REGISTRATIONDATE for the selected filters.", "#1a6f9a", c.ActivationsTrend),
+        ["suspended"] = LineChart("Suspended Events", "Weekly entries into Suspended (S) by ACCTSTATUS.FROMDATE.", "#d35400", c.SuspendedTrend),
+        ["pending-cancellation"] = pendingChart,
+        ["cancellation"] = LineChart("Cancellation Events", "Weekly completed cancellations by ACCTSTATUS.FROMDATE (status T).", "#c0392b", c.CancellationsTrend),
+        ["permanent-closed"] = LineChart("Permanent Closed", "Weekly permanently closed entries by ACCTSTATUS.FROMDATE (status T).", "#7d3c98", c.CancellationsTrend),
+        ["net-growth"] = LineChart("Net Growth", "Weekly net growth = activations − completed cancellations.", "#1e8449", c.NetGrowthTrend),
+        ["churn"] = RateLineChart("Churn Rate (%)", "Weekly cancellations ÷ opening active for the selected period.", "#6c3483", c.ChurnRateTrend)
+    };
+}
+<div id="dashboard-snapshot" class="dashboard-snapshot">
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2 dashboard-export-bar no-capture">
+    <p class="small text-secondary mb-0">Export captures the dashboard exactly as shown (filters, KPIs, charts).</p>
+    <div class="btn-group" role="group" aria-label="Export dashboard snapshot">
+        <button type="button" class="btn btn-outline-secondary btn-sm" id="dashboard-export-png" title="Download PNG image of the dashboard">
+            Save PNG
+        </button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" id="dashboard-export-pdf" title="Download PDF of the dashboard">
+            Save PDF
+        </button>
+    </div>
+</div>
+
+<partial name="_Filters" model="Model" />
+
+<div class="row g-2 kpi-row">
+    <div class="col kpi-col">
+        <partial name="_KpiCard" model="@(Card("New Active Lines", k.NewActiveLines.ToString("N0"), "ACCOUNTS.REGISTRATIONDATE", "new-active", k.NewActiveTrend, k.NewActiveTrend.PreviousValue?.ToString("N0"), linesKey: "new-active"))" />
+    </div>
+    <div class="col kpi-col">
+        <partial name="_KpiCard" model="@(Card("Current Active Lines", k.CurrentActiveLines.ToString("N0"), "OWNSTATUS = A · activated", "current-active", k.CurrentActiveTrend, k.CurrentActiveTrend.PreviousValue?.ToString("N0"), linesKey: "current-active", showChart: false))" />
+    </div>
+    <div class="col kpi-col">
+        <partial name="_KpiCard" model="@(Card("Suspended Events", k.SuspendedEvents.ToString("N0"), "Unique accounts · ACCTSTATUS.FROMDATE", "suspended", k.SuspendedTrend, k.SuspendedTrend.PreviousValue?.ToString("N0"), linesKey: "suspended"))" />
+    </div>
+    <div class="col kpi-col" title="Counts unique accounts that entered Pending to Close (C) during the selected period, using ACCTSTATUS.FROMDATE. Each account is counted once.">
+        <partial name="_KpiCard" model="@(Card("Pending Cancellation", k.PendingCancellationEvents.ToString("N0"), "Unique accounts · ACCTSTATUS.FROMDATE", "pending-cancellation", k.PendingCancellationTrend, k.PendingCancellationTrend.PreviousValue?.ToString("N0"), linesKey: "pending-cancellation"))" />
+    </div>
+    <div class="col kpi-col" title="Counts unique accounts that entered Permanently Closed (T) during the selected period, using ACCTSTATUS.FROMDATE. Each account is counted once.">
+        <partial name="_KpiCard" model="@(Card("Cancellation Events", k.CancellationEvents.ToString("N0"), "Unique accounts · ACCTSTATUS.FROMDATE", "cancellation", k.CancellationTrend, k.CancellationTrend.PreviousValue?.ToString("N0"), "text-danger", "cancellation"))" />
+    </div>
+    <div class="col kpi-col" title="Counts unique accounts that entered Permanently Closed (T) during the selected period, using ACCTSTATUS.FROMDATE. Same definition as Cancellation Events. Each account is counted once.">
+        <partial name="_KpiCard" model="@(Card("Permanent Closed", k.PermanentClosedEvents.ToString("N0"), "Unique accounts · ACCTSTATUS.FROMDATE", "permanent-closed", k.PermanentClosedTrend, k.PermanentClosedTrend.PreviousValue?.ToString("N0"), linesKey: "permanent-closed"))" />
+    </div>
+    <div class="col kpi-col">
+        <partial name="_KpiCard" model="@(Card("Net Growth", k.NetGrowth.ToString("N0"), "New − Cancellations", "net-growth", k.NetGrowthTrend, k.NetGrowthTrend.PreviousValue?.ToString("N0"), k.NetGrowth >= 0 ? "text-success" : "text-danger"))" />
+    </div>
+    <div class="col kpi-col">
+        <partial name="_KpiCard" model="@(Card("Churn Rate", k.ChurnRate.HasValue ? $"{k.ChurnRate:0.##}%" : "—", k.ChurnUnavailableReason ?? "Cancellations ÷ Opening Active", "churn", k.ChurnTrend, k.ChurnTrend.PreviousValue.HasValue ? $"{k.ChurnTrend.PreviousValue:0.##}%" : null))" />
+    </div>
+</div>
+
+<div class="modal fade" id="kpi-sql-modal" tabindex="-1" aria-labelledby="kpi-sql-modal-title" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title h5" id="kpi-sql-modal-title">KPI SQL</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-secondary small mb-2" id="kpi-sql-modal-notes"></p>
+                <p class="small text-muted mb-2">Bind values reflect the current UI filters (From/To, Region, Product, Service Type, Status, Search).</p>
+                <pre class="kpi-sql-pre mb-0"><code id="kpi-sql-modal-code"></code></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="kpi-sql-copy">Copy SQL</button>
+                <button type="button" class="btn btn-primary btn-sm" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="kpi-chart-modal" tabindex="-1" aria-labelledby="kpi-chart-modal-title" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title h5" id="kpi-chart-modal-title">KPI Chart</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-secondary small mb-2" id="kpi-chart-modal-notes"></p>
+                <div class="kpi-chart-canvas-wrap">
+                    <canvas id="kpi-chart-modal-canvas" height="160"></canvas>
+                </div>
+                <p class="small text-muted mt-2 mb-0" id="kpi-chart-modal-empty" hidden>No chart data available for this KPI with the current filters.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary btn-sm" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="kpi-lines-modal" tabindex="-1" aria-labelledby="kpi-lines-modal-title" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title h5" id="kpi-lines-modal-title">Related Lines</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex flex-wrap gap-2 align-items-end mb-3">
+                    <div class="flex-grow-1" style="min-width: 12rem;">
+                        <label class="form-label small mb-1" for="kpi-lines-search">Search</label>
+                        <input type="search" class="form-control form-control-sm" id="kpi-lines-search" placeholder="Account, product name, customer…" autocomplete="off" />
+                    </div>
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="kpi-lines-search-btn">Search</button>
+                    <a class="btn btn-outline-success btn-sm" id="kpi-lines-export-csv" href="#" download>Export CSV</a>
+                </div>
+                <p class="small text-muted mb-2" id="kpi-lines-meta">Uses current dashboard filters.</p>
+                <div class="table-responsive kpi-lines-table-wrap">
+                    <table class="table table-sm table-striped table-hover mb-0" id="kpi-lines-table">
+                        <thead id="kpi-lines-thead"></thead>
+                        <tbody id="kpi-lines-tbody">
+                            <tr><td class="text-muted">Open a KPI list icon to load related lines.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="kpi-lines-prev" disabled>Previous</button>
+                    <span class="small text-muted" id="kpi-lines-page-info"></span>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="kpi-lines-next" disabled>Next</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary btn-sm" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mt-1 dashboard-charts">
+    <div class="col-4"><div class="card content-card"><div class="card-body"><h3 class="h6">Activations Trend</h3><div class="chart-wrap"><canvas id="chart-activations"></canvas></div></div></div></div>
+    <div class="col-4"><div class="card content-card"><div class="card-body"><h3 class="h6">Net Growth</h3><div class="chart-wrap"><canvas id="chart-net"></canvas></div></div></div></div>
+    <div class="col-4"><div class="card content-card"><div class="card-body"><h3 class="h6">Completed Cancellations</h3><div class="chart-wrap"><canvas id="chart-cancellations"></canvas></div></div></div></div>
+    <div class="col-3"><div class="card content-card"><div class="card-body"><h3 class="h6">Region Analysis</h3><div class="chart-wrap chart-wrap-pie"><canvas id="chart-region"></canvas></div><div class="chart-legend"></div></div></div></div>
+    <div class="col-3"><div class="card content-card"><div class="card-body"><h3 class="h6">Product Analysis</h3><div class="chart-wrap chart-wrap-pie"><canvas id="chart-product"></canvas></div><div class="chart-legend"></div></div></div></div>
+    <div class="col-3"><div class="card content-card"><div class="card-body"><h3 class="h6">Cancellation Reasons</h3><div class="chart-wrap chart-wrap-pie"><canvas id="chart-reasons"></canvas></div><div class="chart-legend"></div></div></div></div>
+    <div class="col-3"><div class="card content-card"><div class="card-body"><h3 class="h6">Status Distribution</h3><div class="chart-wrap chart-wrap-pie"><canvas id="chart-status"></canvas></div><div class="chart-legend"></div></div></div></div>
+</div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+<script>
+(() => {
+  const data = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(new {
+      activations = c.ActivationsTrend.Select(x => new { x.PeriodLabel, x.Value }),
+      cancellations = c.CancellationsTrend.Select(x => new { x.PeriodLabel, x.Value }),
+      net = c.NetGrowthTrend.Select(x => new { x.PeriodLabel, x.Value }),
+      status = c.StatusDistribution.Select(x => new { x.Label, x.Value }),
+      region = c.RegionAnalysis.Select(x => new { x.Label, x.Value }),
+      product = c.ProductAnalysis.Select(x => new { x.Label, x.Value }),
+      reasons = c.CancellationReasons.Select(x => new { x.Label, x.Value })
+  }));
+  const kpiQueries = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(queryPayload));
+  const kpiCharts = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(kpiCharts));
+  window.IceDashboard?.renderDashboardCharts?.(data);
+  window.IceDashboard?.bindKpiSqlModal?.(kpiQueries);
+  window.IceDashboard?.bindKpiChartModal?.(kpiCharts);
+  window.IceDashboard?.bindKpiLinesModal?.();
+  window.IceDashboard?.renderSparklines?.();
+  window.IceDashboard?.bindDashboardSnapshotExport?.();
+})();
+</script>
+}

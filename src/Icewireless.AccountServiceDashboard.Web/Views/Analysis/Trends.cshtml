@@ -1,0 +1,84 @@
+@model Icewireless.AccountServiceDashboard.Web.ViewModels.AnalysisTrendsPageViewModel
+@{
+    ViewData["Title"] = Model.Title;
+    ViewBag.ActiveNavKey = Model.ActiveNavKey;
+    ViewBag.Breadcrumbs = Model.Breadcrumbs;
+}
+<partial name="_Filters" model="Model" />
+
+@if (!string.IsNullOrWhiteSpace(Model.Note))
+{
+    <div class="alert alert-info">@Model.Note</div>
+}
+
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="card content-card"><div class="card-body"><h3 class="h6">Activations</h3><canvas id="trend-activations" height="160"></canvas></div></div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card content-card"><div class="card-body"><h3 class="h6">Cancellations</h3><canvas id="trend-cancellations" height="160"></canvas></div></div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card content-card"><div class="card-body"><h3 class="h6">Net Growth</h3><canvas id="trend-net" height="160"></canvas></div></div>
+    </div>
+</div>
+
+<div class="card content-card mt-3">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-sm table-striped">
+                <thead>
+                    <tr>
+                        <th>Period</th>
+                        <th class="text-end">Activations</th>
+                        <th class="text-end">Cancellations</th>
+                        <th class="text-end">Net</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @{
+                    var periods = Model.Activations.Select(a => a.PeriodStart)
+                        .Union(Model.Cancellations.Select(c => c.PeriodStart))
+                        .Union(Model.NetGrowth.Select(n => n.PeriodStart))
+                        .OrderBy(p => p)
+                        .ToList();
+                }
+                @if (periods.Count == 0)
+                {
+                    <tr><td colspan="4" class="text-center text-secondary py-4">No trend points.</td></tr>
+                }
+                else
+                {
+                    foreach (var p in periods)
+                    {
+                        var a = Model.Activations.FirstOrDefault(x => x.PeriodStart == p)?.Value ?? 0;
+                        var c = Model.Cancellations.FirstOrDefault(x => x.PeriodStart == p)?.Value ?? 0;
+                        var n = Model.NetGrowth.FirstOrDefault(x => x.PeriodStart == p)?.Value ?? (a - c);
+                        <tr>
+                            <td>W/C @p.ToString("MMM dd, yyyy")</td>
+                            <td class="text-end">@a.ToString("N0")</td>
+                            <td class="text-end">@c.ToString("N0")</td>
+                            <td class="text-end">@n.ToString("N0")</td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(() => {
+  const payload = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(new {
+      activations = Model.Activations.Select(x => new { x.PeriodLabel, x.Value }),
+      cancellations = Model.Cancellations.Select(x => new { x.PeriodLabel, x.Value }),
+      net = Model.NetGrowth.Select(x => new { x.PeriodLabel, x.Value })
+  }));
+  window.IceDashboard?.renderLineChart?.("trend-activations", payload.activations, "#1a6f9a");
+  window.IceDashboard?.renderLineChart?.("trend-cancellations", payload.cancellations, "#c0392b");
+  window.IceDashboard?.renderLineChart?.("trend-net", payload.net, "#1e8449");
+})();
+</script>
+}

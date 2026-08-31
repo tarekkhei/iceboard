@@ -1,0 +1,55 @@
+@model Icewireless.AccountServiceDashboard.Web.ViewModels.AnalysisBreakdownPageViewModel
+@{
+    ViewData["Title"] = Model.Title;
+    ViewBag.ActiveNavKey = Model.ActiveNavKey;
+    ViewBag.Breadcrumbs = Model.Breadcrumbs;
+}
+<partial name="_Filters" model="Model" />
+
+<div class="row g-3">
+    <div class="col-lg-5">
+        <div class="card content-card h-100">
+            <div class="card-body">
+                <h2 class="h5">@Model.Title</h2>
+                <div class="chart-pie-wrap chart-pie-wrap-lg"><canvas id="analysis-chart"></canvas></div>
+                <div class="chart-legend"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card content-card h-100">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped align-middle">
+                        <thead><tr><th>Label</th><th class="text-end">Value</th></tr></thead>
+                        <tbody>
+                        @if (Model.Items.Count == 0)
+                        {
+                            <tr><td colspan="2" class="text-center text-secondary py-4">No data.</td></tr>
+                        }
+                        else
+                        {
+                            foreach (var item in Model.Items)
+                            {
+                                <tr>
+                                    <td>@item.Label</td>
+                                    <td class="text-end">@item.Value.ToString("N0")</td>
+                                </tr>
+                            }
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(() => {
+  const items = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Items.Select(i => new { i.Label, i.Value })));
+  window.IceDashboard?.renderPieChart?.("analysis-chart", items, 12);
+})();
+</script>
+}

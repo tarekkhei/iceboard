@@ -1,0 +1,67 @@
+@using Icewireless.AccountServiceDashboard.Web.ViewModels
+@{
+    var active = ViewBag.ActiveNavKey as string ?? "";
+    bool IsActive(string key) => string.Equals(active, key, StringComparison.OrdinalIgnoreCase);
+    bool SectionOpen(params string[] keys) => keys.Any(IsActive);
+}
+<aside id="sidebar" class="sidebar" aria-label="Main navigation">
+    <div class="sidebar-brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <div>
+            <strong>Wireless</strong>
+            <small>Dashboard</small>
+        </div>
+        <button type="button" class="sidebar-collapse-btn d-none d-lg-inline-flex" id="sidebar-collapse" aria-label="Collapse navigation">«</button>
+    </div>
+
+    <nav class="sidebar-nav">
+        <a class="nav-link @(IsActive("dashboard") ? "active" : "")" href="/dashboard">
+            <span class="nav-icon" aria-hidden="true">▦</span><span class="nav-text">Dashboard</span>
+        </a>
+
+        <details class="nav-group" @(SectionOpen("line-new-active","line-current-active") ? "open" : null)>
+            <summary><span class="nav-icon" aria-hidden="true">━</span><span class="nav-text">Line Details</span></summary>
+            <a class="nav-sublink @(IsActive("line-new-active") ? "active" : "")" href="/line-details/new-active">New Active Lines</a>
+            <a class="nav-sublink @(IsActive("line-current-active") ? "active" : "")" href="/line-details/current-active">Current Active Lines</a>
+        </details>
+
+        <details class="nav-group" @(SectionOpen("status-active","status-suspended","status-pending-cancellation","status-cancellation","status-permanently-closed","status-old","status-archived") ? "open" : null)>
+            <summary><span class="nav-icon" aria-hidden="true">◉</span><span class="nav-text">Status Event Details</span></summary>
+            <a class="nav-sublink @(IsActive("status-active") ? "active" : "")" href="/status-events/active">Active Status Events</a>
+            <a class="nav-sublink @(IsActive("status-suspended") ? "active" : "")" href="/status-events/suspended">Suspended Events</a>
+            <a class="nav-sublink @(IsActive("status-pending-cancellation") ? "active" : "")" href="/status-events/pending-cancellation">Pending Cancellation</a>
+            <a class="nav-sublink @(IsActive("status-cancellation") ? "active" : "")" href="/status-events/cancellation">Cancellation Events</a>
+            <a class="nav-sublink @(IsActive("status-permanently-closed") ? "active" : "")" href="/status-events/permanently-closed">Permanent Closed</a>
+            <a class="nav-sublink @(IsActive("status-old") ? "active" : "")" href="/status-events/old">Old Status Events</a>
+            <a class="nav-sublink @(IsActive("status-archived") ? "active" : "")" href="/status-events/archived">Archived Status Events</a>
+        </details>
+
+        <details class="nav-group" @(SectionOpen("analysis-region","analysis-product","analysis-service","analysis-cancellation-reason","analysis-activation-trends","analysis-cancellation-trends","analysis-net-growth","analysis-churn") ? "open" : null)>
+            <summary><span class="nav-icon" aria-hidden="true">↗</span><span class="nav-text">Analysis</span></summary>
+            <a class="nav-sublink @(IsActive("analysis-region") ? "active" : "")" href="/analysis/region">Region Analysis</a>
+            <a class="nav-sublink @(IsActive("analysis-product") || IsActive("analysis-service") ? "active" : "")" href="/analysis/product">Product Analysis</a>
+            <a class="nav-sublink @(IsActive("analysis-cancellation-reason") ? "active" : "")" href="/analysis/cancellation-reason">Cancellation by Reason</a>
+            <a class="nav-sublink @(IsActive("analysis-activation-trends") ? "active" : "")" href="/analysis/activation-trends">Activation Trends</a>
+            <a class="nav-sublink @(IsActive("analysis-cancellation-trends") ? "active" : "")" href="/analysis/cancellation-trends">Cancellation Trends</a>
+            <a class="nav-sublink @(IsActive("analysis-net-growth") ? "active" : "")" href="/analysis/net-growth">Net Growth</a>
+            <a class="nav-sublink @(IsActive("analysis-churn") ? "active" : "")" href="/analysis/churn">Churn Analysis</a>
+        </details>
+
+        <details class="nav-group" @(SectionOpen("report-accounts","report-services","report-status-history","report-export") ? "open" : null)>
+            <summary><span class="nav-icon" aria-hidden="true">☰</span><span class="nav-text">Reports</span></summary>
+            <a class="nav-sublink @(IsActive("report-accounts") ? "active" : "")" href="/reports/account-details">Account Details</a>
+            <a class="nav-sublink @(IsActive("report-services") ? "active" : "")" href="/reports/service-details">Service Details</a>
+            <a class="nav-sublink @(IsActive("report-status-history") ? "active" : "")" href="/reports/status-history">Status History</a>
+            <a class="nav-sublink @(IsActive("report-export") ? "active" : "")" href="/reports/export">Export Data</a>
+        </details>
+
+        <details class="nav-group" @(SectionOpen("admin-database","admin-diagnostics","admin-status-mapping","admin-exclusions","admin-settings") ? "open" : null)>
+            <summary><span class="nav-icon" aria-hidden="true">⚙</span><span class="nav-text">Administration</span></summary>
+            <a class="nav-sublink @(IsActive("admin-database") ? "active" : "")" href="/admin/database-status">Database Status</a>
+            <a class="nav-sublink @(IsActive("admin-diagnostics") ? "active" : "")" href="/admin/query-diagnostics">Query Diagnostics</a>
+            <a class="nav-sublink @(IsActive("admin-status-mapping") ? "active" : "")" href="/admin/status-mapping">Status Mapping</a>
+            <a class="nav-sublink @(IsActive("admin-exclusions") ? "active" : "")" href="/admin/account-exclusions">Account Exclusion Rules</a>
+            <a class="nav-sublink @(IsActive("admin-settings") ? "active" : "")" href="/admin/settings">Settings</a>
+        </details>
+    </nav>
+</aside>

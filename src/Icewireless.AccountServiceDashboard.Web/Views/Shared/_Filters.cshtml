@@ -1,0 +1,191 @@
+@using Icewireless.AccountServiceDashboard.Application.Configuration
+@using Microsoft.Extensions.Options
+@model Icewireless.AccountServiceDashboard.Web.ViewModels.PageChromeViewModel
+@inject IOptions<DashboardSettings> DashboardOptions
+@{
+    var filter = Model.Filter ?? new Icewireless.AccountServiceDashboard.Application.DTOs.DashboardFilter().Normalize(50);
+    var options = Model.FilterOptions;
+    var action = Context.Request.Path.Value ?? "/";
+    var settings = DashboardOptions.Value;
+    var providers = settings.AllowedProviderCodes;
+    var selectedProvider = settings.ResolveProvider(filter.ProviderCode);
+}
+<form method="get" action="@action" class="card content-card mb-3 filter-panel" id="global-filters">
+    <div class="card-body">
+        <div class="row g-2 align-items-end">
+            <div class="col-6 col-md-2">
+                <label class="form-label" for="ProviderCode">Provider</label>
+                <select class="form-select" id="ProviderCode" name="ProviderCode">
+                    @foreach (var code in providers)
+                    {
+                        var label = DashboardSettings.ProviderDisplayName(code);
+                        if (string.Equals(selectedProvider, code, StringComparison.OrdinalIgnoreCase))
+                        {
+                            <option value="@code" selected>@label</option>
+                        }
+                        else
+                        {
+                            <option value="@code">@label</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label" for="FromDate">From Date</label>
+                <input class="form-control" type="date" id="FromDate" name="FromDate" value="@(filter.FromDate?.ToString("yyyy-MM-dd"))" />
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label" for="ToDate">To Date</label>
+                <input class="form-control" type="date" id="ToDate" name="ToDate" value="@(filter.ToDate?.ToString("yyyy-MM-dd"))" />
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label" for="Region">Region</label>
+                <select class="form-select" id="Region" name="Region">
+                    <option value="">All</option>
+                    @if (options is not null)
+                    {
+                        foreach (var r in options.Regions)
+                        {
+                            if (string.Equals(filter.Region, r, StringComparison.OrdinalIgnoreCase))
+                            {
+                                <option value="@r" selected>@r</option>
+                            }
+                            else
+                            {
+                                <option value="@r">@r</option>
+                            }
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label" for="Product">Product</label>
+                <select class="form-select" id="Product" name="Product">
+                    <option value="">All</option>
+                    @if (options is not null)
+                    {
+                        foreach (var p in options.Products)
+                        {
+                            if (string.Equals(filter.Product, p, StringComparison.OrdinalIgnoreCase))
+                            {
+                                <option value="@p" selected>@p</option>
+                            }
+                            else
+                            {
+                                <option value="@p">@p</option>
+                            }
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label" for="ServiceType">Service Type</label>
+                <select class="form-select" id="ServiceType" name="ServiceType">
+                    <option value="">All</option>
+                    @if (options is not null)
+                    {
+                        foreach (var s in options.ServiceTypes)
+                        {
+                            if (string.Equals(filter.ServiceType, s, StringComparison.OrdinalIgnoreCase))
+                            {
+                                <option value="@s" selected>@s</option>
+                            }
+                            else
+                            {
+                                <option value="@s">@s</option>
+                            }
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label" for="Status">Status</label>
+                <select class="form-select" id="Status" name="Status">
+                    <option value="">All</option>
+                    @if (options is not null)
+                    {
+                        foreach (var st in options.Statuses)
+                        {
+                            if (string.Equals(filter.Status, st.Code, StringComparison.OrdinalIgnoreCase))
+                            {
+                                <option value="@st.Code" selected>@st.Label</option>
+                            }
+                            else
+                            {
+                                <option value="@st.Code">@st.Label</option>
+                            }
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label" for="Search">Search</label>
+                <input class="form-control" type="search" id="Search" name="Search" value="@filter.Search" placeholder="Account, product name…" autocomplete="off" />
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="d-flex align-items-start gap-2 mt-4">
+                    <div class="form-check mb-0">
+                        <input class="form-check-input" type="checkbox" id="IncludeTestAccounts" name="IncludeTestAccounts" value="true"
+                               @(filter.IncludeTestAccounts ? "checked" : null) />
+                        <label class="form-check-label" for="IncludeTestAccounts">Include Test / Demo Accounts</label>
+                    </div>
+                    <button type="button"
+                            class="btn btn-link kpi-sql-btn exclusion-filter-btn"
+                            title="Manage test / demo patterns"
+                            data-bs-toggle="modal"
+                            data-bs-target="#exclusion-filter-modal"
+                            aria-label="Manage test and demo account patterns">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                            <path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.824.388-2.224 1.841l.17.31a1.464 1.464 0 0 1-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.388 2.824 1.841 2.224l.31-.17a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.824-.388 2.224-1.841l-.17-.31a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.388-2.824-1.841-2.224l-.31.17a1.464 1.464 0 0 1-2.105-.872zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="col-12 d-flex gap-2 justify-content-md-end">
+                <button type="submit" class="btn btn-primary">Apply Filters</button>
+                <a class="btn btn-outline-secondary" href="@action">Reset</a>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="modal fade" id="exclusion-filter-modal" tabindex="-1" aria-labelledby="exclusion-filter-modal-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title h5" id="exclusion-filter-modal-title">Test / Demo Account Patterns</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-secondary small mb-3">
+                    @(filter.IncludeTestAccounts
+                        ? "Include Test / Demo Accounts is checked — these patterns are bypassed until you uncheck it and apply filters."
+                        : "Account name, account code, or customer name containing an active pattern is excluded from KPIs, charts, tables, and exports.")
+                </p>
+                <label class="form-label" for="exclusion-pattern-input">Add pattern</label>
+                <div class="input-group mb-2">
+                    <input class="form-control" type="text" id="exclusion-pattern-input" maxlength="200" placeholder="e.g. TEST" autocomplete="off" />
+                    <button type="button" class="btn btn-primary" id="exclusion-pattern-add">Add</button>
+                </div>
+                <p class="small text-danger d-none mb-2" id="exclusion-pattern-error" role="alert"></p>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Pattern</th>
+                                <th>Status</th>
+                                <th class="text-end"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="exclusion-pattern-list">
+                            <tr><td colspan="3" class="text-secondary">Loading…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary btn-sm" data-bs-dismiss="modal">Done</button>
+            </div>
+        </div>
+    </div>
+</div>

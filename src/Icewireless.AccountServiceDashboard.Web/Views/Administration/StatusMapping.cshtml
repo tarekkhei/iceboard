@@ -1,0 +1,34 @@
+@model Icewireless.AccountServiceDashboard.Web.ViewModels.StatusMappingPageViewModel
+@{
+    ViewData["Title"] = Model.Title;
+    ViewBag.ActiveNavKey = Model.ActiveNavKey;
+    ViewBag.Breadcrumbs = Model.Breadcrumbs;
+}
+
+<div class="card content-card">
+    <div class="card-body">
+        <h2 class="h4 mb-3">@Model.Title</h2>
+        <p class="text-secondary">Centralized status mapping. Controllers and views must use <code>IStatusMappingService</code> — never hardcode codes.</p>
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">Code</th>
+                        <th scope="col">Label</th>
+                        <th scope="col">Enum</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var m in Model.Mappings)
+                {
+                    <tr>
+                        <td><code>@m.Code</code></td>
+                        <td>@m.Label</td>
+                        <td>@m.EnumName</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

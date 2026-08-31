@@ -1,0 +1,15 @@
+﻿@model Icewireless.AccountServiceDashboard.Web.ViewModels.ErrorViewModel
+@{
+    ViewData["Title"] = "Error";
+    Layout = "_Layout";
+    ViewBag.ActiveNavKey = "dashboard";
+}
+
+<div class="alert alert-danger" role="alert">
+    <p class="mb-2">@(string.IsNullOrWhiteSpace(Model.Message) ? "An unexpected error occurred. Please try again or contact support." : Model.Message)</p>
+    @if (!string.IsNullOrWhiteSpace(Model.Detail))
+    {
+        <p class="small mb-2"><code>@Model.Detail</code></p>
+    }
+    <p class="small mb-0">On the server, check <code>logs\stdout_*.log</code> and <code>logs\dashboard-*.log</code>. After an upgrade, keep your existing <code>appsettings.Production.json</code> (connection string) and <code>App_Data\account-exclusion-rules.json</code>.</p>
+</div>

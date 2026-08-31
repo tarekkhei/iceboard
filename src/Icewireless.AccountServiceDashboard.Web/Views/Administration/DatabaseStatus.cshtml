@@ -1,0 +1,22 @@
+@model Icewireless.AccountServiceDashboard.Web.ViewModels.DatabaseStatusPageViewModel
+@{
+    ViewData["Title"] = Model.Title;
+    ViewBag.ActiveNavKey = Model.ActiveNavKey;
+    ViewBag.Breadcrumbs = Model.Breadcrumbs;
+}
+
+<div class="card content-card">
+    <div class="card-body">
+        <h2 class="h4 mb-3">@Model.Title</h2>
+        <dl class="row mb-0">
+            <dt class="col-sm-3">Configured</dt>
+            <dd class="col-sm-9">@(Model.Status.Configured ? "Yes" : "No")</dd>
+            <dt class="col-sm-3">Reachable</dt>
+            <dd class="col-sm-9">@(Model.Status.Reachable ? "Yes" : "No")</dd>
+            <dt class="col-sm-3">Checked (UTC)</dt>
+            <dd class="col-sm-9">@Model.Status.CheckedAtUtc.ToString("u")</dd>
+            <dt class="col-sm-3">Message</dt>
+            <dd class="col-sm-9">@Model.Status.Message</dd>
+        </dl>
+    </div>
+</div>

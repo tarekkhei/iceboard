@@ -1,0 +1,89 @@
+@model Icewireless.AccountServiceDashboard.Web.ViewModels.KpiCardViewModel
+@{
+    var m = Model;
+    var trend = m.Trend;
+    var dir = trend?.Direction ?? "na";
+    var arrow = dir switch { "up" => "▲", "down" => "▼", "flat" => "●", _ => "" };
+    var trendCss = dir switch { "up" => "kpi-trend-up", "down" => "kpi-trend-down", "flat" => "kpi-trend-flat", _ => "kpi-trend-na" };
+    var sparkJson = trend?.Sparkline is { Count: > 0 }
+        ? System.Text.Json.JsonSerializer.Serialize(trend.Sparkline)
+        : "[]";
+}
+<div class="card content-card kpi-card h-100">
+    <div class="card-body">
+        <div class="kpi-card-header">
+            <h2 class="h6 text-muted mb-0">@m.Title</h2>
+            <div class="kpi-card-actions">
+                @if (m.ShowChart)
+                {
+                    <button type="button"
+                            class="btn btn-link kpi-sql-btn kpi-chart-btn"
+                            title="View chart"
+                            data-bs-toggle="modal"
+                            data-bs-target="#kpi-chart-modal"
+                            data-kpi-chart-key="@m.QueryKey"
+                            data-kpi-chart-title="@m.Title"
+                            aria-label="View chart for @m.Title">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M0 0h1v15h15v1H0zm14.817 3.113a.5.5 0 0 1 .07.704l-4.5 5.5a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61 4.15-5.073a.5.5 0 0 1 .704-.07"/>
+                        </svg>
+                    </button>
+                }
+                @if (!string.IsNullOrWhiteSpace(m.LinesKey))
+                {
+                    <button type="button"
+                            class="btn btn-link kpi-sql-btn kpi-lines-btn"
+                            title="View related lines"
+                            data-bs-toggle="modal"
+                            data-bs-target="#kpi-lines-modal"
+                            data-kpi-lines-key="@m.LinesKey"
+                            data-kpi-lines-title="@m.Title"
+                            aria-label="View related lines for @m.Title">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                            <path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm2.5 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h11a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm0 4a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h11a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm0 4a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h11a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5z"/>
+                        </svg>
+                    </button>
+                }
+                <button type="button"
+                        class="btn btn-link kpi-sql-btn"
+                        title="View SQL"
+                        data-bs-toggle="modal"
+                        data-bs-target="#kpi-sql-modal"
+                        data-kpi-key="@m.QueryKey"
+                        aria-label="View SQL for @m.Title">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                        <path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm2.5 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h2a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm4 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h6a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm-4 4a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h2a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm4 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h6a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm-4 4a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h2a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm4 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h6a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <p class="display-6 mb-0 @m.ValueCss">@m.Value</p>
+        @if (trend is not null && trend.Direction != "na")
+        {
+            <div class="kpi-trend @trendCss">
+                <span class="kpi-trend-change">
+                    @if (!string.IsNullOrEmpty(arrow))
+                    {
+                        <span class="kpi-trend-arrow" aria-hidden="true">@arrow</span>
+                    }
+                    @if (trend.PercentChange.HasValue)
+                    {
+                        <span>@Math.Abs(trend.PercentChange.Value).ToString("0.#")% vs previous period</span>
+                    }
+                    else
+                    {
+                        <span>vs previous period</span>
+                    }
+                </span>
+                @if (trend.PreviousValue.HasValue)
+                {
+                    <span class="kpi-trend-prev">Previous: @m.PreviousDisplay</span>
+                }
+                @if (trend.Sparkline.Count > 1)
+                {
+                    <svg class="kpi-sparkline" viewBox="0 0 64 18" width="64" height="18" aria-hidden="true" data-spark='@Html.Raw(sparkJson)'></svg>
+                }
+            </div>
+        }
+    </div>
+</div>

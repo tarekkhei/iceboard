@@ -1,0 +1,29 @@
+# Build
+bin/
+obj/
+*.user
+.vs/
+.idea/
+
+# Data / secrets
+*.db
+*.db-shm
+*.db-wal
+logs/
+appsettings.*.local.json
+appsettings.Production.json
+!deploy/windows/appsettings.Production.json
+# Keep the Windows template; ignore a Production file if someone copies one into the Web project
+src/**/appsettings.Production.json
+
+# Publish output (rebuild with scripts/publish-windows.sh)
+artifacts/publish/
+artifacts/*.zip
+
+# OS
+.DS_Store
+
+# Test
+TestResults/
+coverage/
+

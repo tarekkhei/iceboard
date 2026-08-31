@@ -1,0 +1,53 @@
+@model Icewireless.AccountServiceDashboard.Web.ViewModels.ExportPageViewModel
+@{
+    ViewData["Title"] = Model.Title;
+    ViewBag.ActiveNavKey = Model.ActiveNavKey;
+    ViewBag.Breadcrumbs = Model.Breadcrumbs;
+    var q = Context.Request.QueryString.HasValue ? Context.Request.QueryString.Value!.TrimStart('?') : string.Empty;
+}
+<partial name="_Filters" model="Model" />
+
+<div class="card content-card">
+    <div class="card-body">
+        <h2 class="h5 mb-3">Export Data</h2>
+        <p class="text-secondary">Exports use the same filters as detail pages. CSV is UTF-8. Excel download currently delivers CSV content with an <code>.xlsx</code> filename for spreadsheet open-compatibility.</p>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Report</th>
+                        <th>CSV</th>
+                        <th>Excel</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>New Active Lines</td>
+                        <td><a href="/reports/export/csv/new-active?@q">Download</a></td>
+                        <td><a href="/reports/export/excel/new-active?@q">Download</a></td>
+                    </tr>
+                    <tr>
+                        <td>Current Active Lines</td>
+                        <td><a href="/reports/export/csv/current-active?@q">Download</a></td>
+                        <td><a href="/reports/export/excel/current-active?@q">Download</a></td>
+                    </tr>
+                    <tr>
+                        <td>Status History</td>
+                        <td><a href="/reports/export/csv/status-history?@q">Download</a></td>
+                        <td><a href="/reports/export/excel/status-history?@q">Download</a></td>
+                    </tr>
+                    <tr>
+                        <td>Suspended Events</td>
+                        <td><a href="/reports/export/csv/suspended?@q">Download</a></td>
+                        <td><a href="/reports/export/excel/suspended?@q">Download</a></td>
+                    </tr>
+                    <tr>
+                        <td>Cancellation Events</td>
+                        <td><a href="/reports/export/csv/cancellation?@q">Download</a></td>
+                        <td><a href="/reports/export/excel/cancellation?@q">Download</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

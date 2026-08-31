@@ -1,0 +1,140 @@
+@model Icewireless.AccountServiceDashboard.Web.ViewModels.AccountExclusionsPageViewModel
+@{
+    ViewData["Title"] = Model.Title;
+    ViewBag.ActiveNavKey = Model.ActiveNavKey;
+    ViewBag.Breadcrumbs = Model.Breadcrumbs;
+}
+<div class="card content-card mb-3">
+    <div class="card-body">
+        <h2 class="h5 mb-2">@Model.Title</h2>
+        <p class="text-secondary small mb-0">
+            Active rules are stored in a local JSON file and exclude accounts whose <code>ACCOUNTNAME</code>, <code>CODE</code>, or customer (contact) name contains the pattern (case-insensitive).
+            Dashboard default: exclusions on. Use <strong>Include Test / Demo Accounts</strong> in Filters to bypass.
+        </p>
+    </div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-warning">@Model.ErrorMessage</div>
+}
+else if (TempData["ExclusionError"] is string tempErr)
+{
+    <div class="alert alert-warning">@tempErr</div>
+}
+
+<div class="card content-card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end mb-3">
+            <div class="col-md-6">
+                <label class="form-label" for="search">Search</label>
+                <input class="form-control" id="search" name="search" value="@Model.Search" placeholder="Pattern or description" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="isActive">Status</label>
+                <select class="form-select" id="isActive" name="isActive">
+                    @if (Model.ActiveOnly is null)
+                    {
+                        <option value="" selected>All</option>
+                    }
+                    else
+                    {
+                        <option value="">All</option>
+                    }
+                    @if (Model.ActiveOnly == true)
+                    {
+                        <option value="true" selected>Active</option>
+                    }
+                    else
+                    {
+                        <option value="true">Active</option>
+                    }
+                    @if (Model.ActiveOnly == false)
+                    {
+                        <option value="false" selected>Inactive</option>
+                    }
+                    else
+                    {
+                        <option value="false">Inactive</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-outline-primary">Search</button>
+            </div>
+        </form>
+
+        <form method="post" asp-action="CreateExclusion" class="row g-2 align-items-end border-top pt-3">
+            @Html.AntiForgeryToken()
+            <div class="col-md-3">
+                <label class="form-label" for="pattern">Pattern</label>
+                <input class="form-control" id="pattern" name="pattern" required maxlength="200" placeholder="e.g. TEST" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="description">Description</label>
+                <input class="form-control" id="description" name="description" maxlength="500" />
+            </div>
+            <div class="col-md-2">
+                <div class="form-check mt-4">
+                    <input class="form-check-input" type="checkbox" id="isActiveCreate" name="isActive" value="true" checked />
+                    <label class="form-check-label" for="isActiveCreate">Active</label>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary">Add Rule</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card content-card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-sm table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Pattern</th>
+                        <th>Match Type</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                        <th>Created Date</th>
+                        <th>Updated Date</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @if (Model.Data.Items.Count == 0)
+                {
+                    <tr><td colspan="7" class="text-center text-secondary py-4">No exclusion rules found.</td></tr>
+                }
+                else
+                {
+                    foreach (var rule in Model.Data.Items)
+                    {
+                        <tr>
+                            <td><code>@rule.Pattern</code></td>
+                            <td>@rule.MatchType</td>
+                            <td>@rule.Description</td>
+                            <td>@(rule.IsActive ? "Active" : "Inactive")</td>
+                            <td>@rule.CreatedDate.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>@rule.LastUpdated.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td class="text-nowrap">
+                                <form method="post" asp-action="ToggleExclusion" asp-route-id="@rule.Id" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="enable" value="@(!rule.IsActive)" />
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">@(rule.IsActive ? "Disable" : "Enable")</button>
+                                </form>
+                                <form method="post" asp-action="DeleteExclusion" asp-route-id="@rule.Id" class="d-inline"
+                                      onsubmit="return confirm('Delete this exclusion rule?');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

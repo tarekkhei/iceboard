@@ -1,0 +1,97 @@
+@using System.Globalization
+@model Icewireless.AccountServiceDashboard.Web.ViewModels.StatusEventsPageViewModel
+@{
+    ViewData["Title"] = Model.Title;
+    ViewBag.ActiveNavKey = Model.ActiveNavKey;
+    ViewBag.Breadcrumbs = Model.Breadcrumbs;
+    var path = Context.Request.Path.Value ?? $"/status-events/{Model.EventKey}";
+    var q = BuildFilterQuery(Model.Filter);
+    var csvUrl = $"/status-events/{Model.EventKey}/export/csv" + (string.IsNullOrEmpty(q) ? "" : "?" + q.TrimStart('&'));
+    var xlsUrl = $"/status-events/{Model.EventKey}/export/excel" + (string.IsNullOrEmpty(q) ? "" : "?" + q.TrimStart('&'));
+    string BuildFilterQuery(Icewireless.AccountServiceDashboard.Application.DTOs.DashboardFilter? filter)
+    {
+        if (filter is null) return string.Empty;
+        var parts = new List<string>();
+        void Add(string n, string? v) { if (!string.IsNullOrWhiteSpace(v)) parts.Add($"{n}={Uri.EscapeDataString(v)}"); }
+        Add("ProviderCode", filter.ProviderCode);
+        Add("FromDate", filter.FromDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+        Add("ToDate", filter.ToDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+        Add("Region", filter.Region);
+        Add("Product", filter.Product);
+        Add("ServiceType", filter.ServiceType);
+        Add("Status", filter.Status);
+        Add("Search", filter.Search);
+        if (filter.IncludeTestAccounts) parts.Add("IncludeTestAccounts=true");
+        return parts.Count == 0 ? string.Empty : "&" + string.Join("&", parts);
+    }
+}
+<partial name="_Filters" model="Model" />
+
+<div class="card content-card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <div>
+                <h2 class="h5 mb-1">@Model.Title</h2>
+                <p class="mb-0 text-secondary small">
+                    @if (string.Equals(Model.EventKey, "suspended", StringComparison.OrdinalIgnoreCase)
+                         || string.Equals(Model.EventKey, "pending-cancellation", StringComparison.OrdinalIgnoreCase)
+                         || string.Equals(Model.EventKey, "cancellation", StringComparison.OrdinalIgnoreCase)
+                         || string.Equals(Model.EventKey, "permanently-closed", StringComparison.OrdinalIgnoreCase))
+                    {
+                        <text>Unique accounts · event date: <code>@Model.DateFieldUsed</code> · COUNT(DISTINCT a.id)</text>
+                    }
+                    else
+                    {
+                        <text>Event date: <code>@Model.DateFieldUsed</code> · Status end: <code>@Model.StatusEndField</code></text>
+                    }
+                </p>
+            </div>
+            <partial name="_ExportButtons" model="(csvUrl, xlsUrl)" />
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Status From Date</th>
+                        <th>Status End Date</th>
+                        <th>Status</th>
+                        <th>Account Code</th>
+                        <th>Account Name</th>
+                        <th>Product</th>
+                        <th>Service</th>
+                        <th>Service Type</th>
+                        <th>Reason</th>
+                        <th>Region</th>
+                        <th>Customer</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @if (Model.Data.Items.Count == 0)
+                {
+                    <tr><td colspan="11" class="text-center text-secondary py-4">No status events for the selected filters.</td></tr>
+                }
+                else
+                {
+                    foreach (var row in Model.Data.Items)
+                    {
+                        <tr>
+                            <td>@row.StatusFromDate.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>@(row.StatusEndDate?.ToString("yyyy-MM-dd HH:mm") ?? "")</td>
+                            <td>@row.StatusLabel</td>
+                            <td>@row.AccountCode</td>
+                            <td>@row.AccountName</td>
+                            <td>@row.Product</td>
+                            <td>@row.Service</td>
+                            <td>@row.ServiceType</td>
+                            <td>@row.Reason</td>
+                            <td>@row.Region</td>
+                            <td>@row.Customer</td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </div>
+        <partial name="_Pager" model="(Model.Data.TotalCount, Model.Data.Page, Model.Data.PageSize, path, q)" />
+    </div>
+</div>

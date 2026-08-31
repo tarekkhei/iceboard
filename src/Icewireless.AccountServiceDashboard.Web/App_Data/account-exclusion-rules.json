@@ -1,0 +1,142 @@
+[
+  {
+    "id": 1,
+    "pattern": "TEST",
+    "matchType": "CONTAINS",
+    "isActive": true,
+    "description": "Exclude names containing TEST",
+    "createdBy": "DASHBOARD",
+    "createdDate": "2026-07-27T00:00:00Z",
+    "lastUpdated": "2026-07-27T00:00:00Z"
+  },
+  {
+    "id": 2,
+    "pattern": "DEMO",
+    "matchType": "CONTAINS",
+    "isActive": true,
+    "description": "Exclude names containing DEMO",
+    "createdBy": "DASHBOARD",
+    "createdDate": "2026-07-27T00:00:00Z",
+    "lastUpdated": "2026-07-27T00:00:00Z"
+  },
+  {
+    "id": 3,
+    "pattern": "QA",
+    "matchType": "CONTAINS",
+    "isActive": true,
+    "description": "Exclude names containing QA",
+    "createdBy": "DASHBOARD",
+    "createdDate": "2026-07-27T00:00:00Z",
+    "lastUpdated": "2026-07-27T00:00:00Z"
+  },
+  {
+    "id": 4,
+    "pattern": "TRAINING",
+    "matchType": "CONTAINS",
+    "isActive": true,
+    "description": "Exclude names containing TRAINING",
+    "createdBy": "DASHBOARD",
+    "createdDate": "2026-07-27T00:00:00Z",
+    "lastUpdated": "2026-07-27T00:00:00Z"
+  },
+  {
+    "id": 5,
+    "pattern": "SAMPLE",
+    "matchType": "CONTAINS",
+    "isActive": true,
+    "description": "Exclude names containing SAMPLE",
+    "createdBy": "DASHBOARD",
+    "createdDate": "2026-07-27T00:00:00Z",
+    "lastUpdated": "2026-07-27T00:00:00Z"
+  },
+  {
+    "id": 6,
+    "pattern": "DUMMY",
+    "matchType": "CONTAINS",
+    "isActive": true,
+    "description": "Exclude names containing DUMMY",
+    "createdBy": "DASHBOARD",
+    "createdDate": "2026-07-27T00:00:00Z",
+    "lastUpdated": "2026-07-27T00:00:00Z"
+  },
+  {
+    "id": 7,
+    "pattern": "Shivam",
+    "matchType": "CONTAINS",
+    "isActive": true,
+    "description": "Dev Shivam test",
+    "createdBy": "DASHBOARD",
+    "createdDate": "2026-07-27T16:00:20.121726Z",
+    "lastUpdated": "2026-07-27T16:00:20.121726Z"
+  },
+  {
+    "id": 8,
+    "pattern": "Barboi",
+    "matchType": "CONTAINS",
+    "isActive": true,
+    "description": "Mihai Barboir",
+    "createdBy": "DASHBOARD",
+    "createdDate": "2026-07-27T17:57:38.597654Z",
+    "lastUpdated": "2026-07-27T17:57:38.597654Z"
+  },
+  {
+    "id": 9,
+    "pattern": "Deepesh Kumar",
+    "matchType": "CONTAINS",
+    "isActive": true,
+    "description": "Deepesh Kumar testing",
+    "createdBy": "DASHBOARD",
+    "createdDate": "2026-07-27T18:06:41.91029Z",
+    "lastUpdated": "2026-07-27T18:06:41.91029Z"
+  },
+  {
+    "id": 10,
+    "pattern": "John Erwin",
+    "matchType": "CONTAINS",
+    "isActive": true,
+    "description": "John test",
+    "createdBy": "DASHBOARD",
+    "createdDate": "2026-07-29T08:59:57.488068Z",
+    "lastUpdated": "2026-07-29T08:59:57.488068Z"
+  },
+  {
+    "id": 11,
+    "pattern": "Testing",
+    "matchType": "CONTAINS",
+    "isActive": true,
+    "description": "Testing account",
+    "createdBy": "DASHBOARD",
+    "createdDate": "2026-07-29T14:39:57.937204Z",
+    "lastUpdated": "2026-07-29T14:39:57.937204Z"
+  },
+  {
+    "id": 12,
+    "pattern": "Nidhi Berwal",
+    "matchType": "CONTAINS",
+    "isActive": true,
+    "description": "Test account",
+    "createdBy": "DASHBOARD",
+    "createdDate": "2026-08-18T17:09:52.945698Z",
+    "lastUpdated": "2026-08-18T17:09:52.945698Z"
+  },
+  {
+    "id": 13,
+    "pattern": "Dharmesh",
+    "matchType": "CONTAINS",
+    "isActive": true,
+    "description": "Exclude names containing Dharmesh",
+    "createdBy": "DASHBOARD",
+    "createdDate": "2026-08-27T20:19:55.303302Z",
+    "lastUpdated": "2026-08-27T20:19:55.303302Z"
+  },
+  {
+    "id": 14,
+    "pattern": "Dharmesh",
+    "matchType": "CONTAINS",
+    "isActive": true,
+    "description": "Exclude names containing Dharmesh",
+    "createdBy": "DASHBOARD",
+    "createdDate": "2026-08-28T15:27:48.861158Z",
+    "lastUpdated": "2026-08-28T15:27:48.861158Z"
+  }
+]

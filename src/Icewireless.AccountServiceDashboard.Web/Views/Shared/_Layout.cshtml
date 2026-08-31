@@ -1,0 +1,81 @@
+﻿@using Icewireless.AccountServiceDashboard.Application.Configuration
+@using Icewireless.AccountServiceDashboard.Web
+@using Icewireless.AccountServiceDashboard.Web.ViewModels
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Wireless</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/app.css" asp-append-version="true" />
+</head>
+@{
+    var activeNav = ViewBag.ActiveNavKey as string
+        ?? (ViewData["ActiveNavKey"] as string)
+        ?? "";
+    if (Model is PageChromeViewModel chrome && !string.IsNullOrEmpty(chrome.ActiveNavKey))
+    {
+        activeNav = chrome.ActiveNavKey;
+    }
+    ViewBag.ActiveNavKey = activeNav;
+}
+<body class="app-shell">
+    <div id="loading-overlay" class="loading-overlay d-none" aria-live="polite" aria-busy="true">
+        <div class="spinner-border text-light" role="status"><span class="visually-hidden">Loading…</span></div>
+    </div>
+
+    <button type="button" class="btn btn-dark sidebar-toggle d-lg-none" id="sidebar-toggle" aria-controls="sidebar" aria-expanded="false">Menu</button>
+
+    <div class="app-frame">
+        <partial name="_Sidebar" />
+        <div class="app-main">
+            <header class="app-header sticky-top">
+                <div>
+                    <p class="header-eyebrow mb-0">Wireless Dashboard</p>
+                    <h1 class="h4 mb-0">@(ViewData["Title"] ?? "Dashboard")</h1>
+                </div>
+                <div class="header-actions">
+                    <span class="badge text-bg-light border">v@(AppInfo.Version)</span>
+                    <span class="badge text-bg-secondary">@(DashboardSettings.ProviderDisplayName(Model is PageChromeViewModel chromeProvider ? chromeProvider.Filter?.ProviderCode : null))</span>
+                </div>
+            </header>
+
+            <main class="app-content">
+                @{
+                    IReadOnlyList<BreadcrumbItem>? crumbs = Model is PageChromeViewModel chromePage && chromePage.Breadcrumbs.Count > 0
+                        ? chromePage.Breadcrumbs
+                        : ViewBag.Breadcrumbs as IReadOnlyList<BreadcrumbItem>;
+                }
+                @if (crumbs is { Count: > 0 })
+                {
+                    <nav aria-label="breadcrumb" class="mb-3">
+                        <ol class="breadcrumb">
+                            @foreach (var crumb in crumbs)
+                            {
+                                if (!string.IsNullOrEmpty(crumb.Url))
+                                {
+                                    <li class="breadcrumb-item"><a href="@crumb.Url">@crumb.Text</a></li>
+                                }
+                                else
+                                {
+                                    <li class="breadcrumb-item active" aria-current="page">@crumb.Text</li>
+                                }
+                            }
+                        </ol>
+                    </nav>
+                }
+
+                <div id="alert-host" class="d-none alert alert-danger" role="alert"></div>
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="~/js/app.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

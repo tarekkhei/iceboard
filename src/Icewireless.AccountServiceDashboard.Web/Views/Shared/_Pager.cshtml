@@ -1,0 +1,22 @@
+@model (int TotalCount, int Page, int PageSize, string BasePath, string QuerySuffix)
+@{
+    var totalPages = Model.PageSize <= 0 ? 1 : Math.Max(1, (int)Math.Ceiling(Model.TotalCount / (double)Model.PageSize));
+    var current = Math.Clamp(Model.Page, 1, totalPages);
+    string Link(int p) => $"{Model.BasePath}?Page={p}&PageSize={Model.PageSize}{Model.QuerySuffix}";
+}
+@if (Model.TotalCount > 0)
+{
+    <nav class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3" aria-label="Pagination">
+        <p class="mb-0 text-secondary small">
+            Showing page @current of @totalPages (@Model.TotalCount.ToString("N0") rows)
+        </p>
+        <ul class="pagination mb-0">
+            <li class="page-item @(current <= 1 ? "disabled" : null)">
+                <a class="page-link" href="@(current <= 1 ? "#" : Link(current - 1))">Previous</a>
+            </li>
+            <li class="page-item @(current >= totalPages ? "disabled" : null)">
+                <a class="page-link" href="@(current >= totalPages ? "#" : Link(current + 1))">Next</a>
+            </li>
+        </ul>
+    </nav>
+}
